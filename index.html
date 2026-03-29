@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HI-ORR CDRR">
+<meta name="theme-color" content="#1B3A6B">
+<title>HI-ORR — Community Disaster Response Report</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22HI-ORR%20CDRR%20Form%22%2C%22short_name%22%3A%22CDRR%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231B3A6B%22%2C%22theme_color%22%3A%22%231B3A6B%22%7D">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#1B3A6B;--navy-lt:#2E5090;--navy-bg:#DCE8F5;
+    --gold:#C8960C;--red:#C00000;--amber:#E07B00;--green:#375623;
+    --bg:#ffffff;--bg2:#f8f9fa;--bg3:#f0f2f5;
+    --text:#1a1a1a;--text2:#555;--text3:#888;
+    --border:#d0d5dd;--border2:#e5e9f0;
+    --shadow:0 1px 3px rgba(0,0,0,0.1);
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1a1d23;--bg2:#22262e;--bg3:#2a2f38;
+      --text:#e8eaf0;--text2:#a0a8b8;--text3:#6a7280;
+      --border:#3a3f4a;--border2:#2e3340;
+    }
+  }
+  html,body{height:100%;overflow:hidden}
+  body{font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg3);color:var(--text);font-size:14px;line-height:1.5}
+
+  /* Layout */
+  #app{display:flex;flex-direction:column;height:100vh;max-width:100%}
+  #topbar{background:var(--navy);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;-webkit-user-select:none;user-select:none}
+  #topbar-title{flex:1;min-width:0}
+  #topbar-title h1{color:#fff;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #topbar-title p{color:#CCE0FF;font-size:10px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #goldbar{height:3px;background:var(--gold);flex-shrink:0}
+  #progress-bar{height:3px;background:rgba(255,255,255,0.15);flex-shrink:0}
+  #progress-fill{height:100%;background:var(--gold);transition:width 0.4s ease}
+
+  /* Section tabs */
+  #tabs{display:flex;overflow-x:auto;background:var(--bg2);border-bottom:1px solid var(--border2);flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{padding:9px 14px;border:none;border-bottom:2.5px solid transparent;background:transparent;cursor:pointer;white-space:nowrap;font-size:11px;font-weight:400;color:var(--text3);font-family:inherit;transition:all 0.15s;flex-shrink:0}
+  .tab.active{font-weight:700;color:var(--navy);border-bottom-color:var(--navy)}
+  @media(prefers-color-scheme:dark){.tab.active{color:#7EB3F0;border-bottom-color:#7EB3F0}}
+  #section-title{padding:6px 14px;font-size:11px;color:var(--text3);background:var(--bg2);border-bottom:1px solid var(--border2);flex-shrink:0}
+
+  /* Content */
+  #content{flex:1;overflow-y:auto;padding:10px 8px 80px;-webkit-overflow-scrolling:touch}
+
+  /* Bottom nav */
+  #botnav{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-top:1px solid var(--border2);z-index:100}
+  #botnav span{font-size:11px;color:var(--text3)}
+
+  /* Buttons */
+  .btn{padding:7px 16px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;border:none}
+  .btn-navy{background:var(--navy);color:#fff}
+  .btn-navy:hover{background:var(--navy-lt)}
+  .btn-navy:disabled{opacity:0.35;cursor:not-allowed}
+  .btn-outline{background:transparent;border:1px solid var(--navy);color:var(--navy)}
+  .btn-outline:disabled{opacity:0.3;cursor:not-allowed}
+  .btn-gold{background:var(--gold);color:#fff;font-weight:700}
+  .btn-ghost{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:11px;padding:5px 10px}
+  .btn-add{width:100%;padding:8px;border:1px dashed var(--navy);border-radius:4px;background:transparent;color:var(--navy);font-size:12px;cursor:pointer;font-family:inherit;margin-top:4px}
+
+  /* Cards */
+  .card{background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;margin-bottom:8px}
+
+  /* Section headers */
+  .sec-hdr{background:var(--navy);padding:10px 14px;margin-bottom:2px;border-radius:4px 4px 0 0}
+  .sec-hdr h2{color:#fff;font-size:13px;font-weight:700}
+  .sec-hdr p{color:#CCE0FF;font-size:11px;margin-top:2px}
+  .sub-hdr{background:var(--navy-lt);padding:6px 12px;color:#fff;font-weight:700;font-size:11px;margin-bottom:2px;margin-top:10px;border-radius:2px}
+
+  /* Alert boxes */
+  .alert{border-radius:4px;padding:10px 12px;margin:8px 0;border-width:1.5px;border-style:solid}
+  .alert h4{font-size:12px;font-weight:700;margin-bottom:4px}
+  .alert p{font-size:11px;line-height:1.5;color:var(--text2)}
+  .alert-red{background:#FBEAEA;border-color:var(--red)}
+  .alert-red h4{color:var(--red)}
+  .alert-amber{background:#FEF2E4;border-color:var(--amber)}
+  .alert-amber h4{color:var(--amber)}
+  @media(prefers-color-scheme:dark){
+    .alert-red{background:#2d1515}
+    .alert-amber{background:#2d2010}
+  }
+
+  /* Form fields */
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:3px}
+  .field input,.field select,.field textarea{
+    width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;
+    background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;
+    transition:border-color 0.15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(27,58,107,0.12)
+  }
+  .field textarea{resize:vertical;min-height:68px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  @media(max-width:480px){
+    .grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}
+    .grid-3>*:last-child:nth-child(odd),.grid-4>*:nth-child(n+3){grid-column:auto}
+  }
+
+  /* Need block */
+  .need-block{border:1.5px solid var(--navy);border-radius:6px;margin-bottom:14px;overflow:hidden}
+  .need-hdr{background:var(--navy-bg);padding:8px 12px;display:flex;align-items:center;gap:8px}
+  .need-hdr input{flex:1;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--navy);outline:none;font-family:inherit}
+  .need-num{font-weight:800;font-size:13px;color:var(--navy);white-space:nowrap}
+  .priority-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap}
+  .need-body{padding:10px 12px}
+  .need-row{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+  @media(max-width:480px){.need-row{grid-template-columns:1fr}}
+  .need-footer{padding:0 12px 10px;border-top:1px solid var(--border2);padding-top:8px}
+  .need-notif{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  /* Ops entries */
+  .ops-type{display:inline-flex;gap:0}
+  .ops-type button{padding:4px 9px;font-size:11px;font-weight:600;border:1px solid var(--navy);background:transparent;color:var(--navy);cursor:pointer;font-family:inherit}
+  .ops-type button:first-child{border-radius:3px 0 0 3px}
+  .ops-type button:last-child{border-radius:0 3px 3px 0;border-left:none}
+  .ops-type button.active{background:var(--navy);color:#fff}
+
+  /* Wellness checklist */
+  .ck-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0}
+  .ck-item{text-align:center}
+  .ck-item label{display:block;font-size:9px;font-weight:700;color:var(--navy);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.03em}
+  .ck-item select{font-size:11px;padding:3px 2px;text-align:center}
+
+  /* Summary table */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.summary{width:100%;border-collapse:collapse;font-size:11px;min-width:600px}
+  table.summary th{background:var(--navy);color:#fff;padding:6px 6px;text-align:left;font-size:10px;white-space:nowrap;font-weight:700}
+  table.summary td{padding:3px 3px;border-bottom:1px solid var(--border2)}
+  table.summary tr:nth-child(even) td{background:var(--bg3)}
+  table.summary input,table.summary select{font-size:11px;padding:3px 4px;border:1px solid var(--border2)}
+
+  /* GPS button */
+  .gps-bar{background:var(--navy-bg);border:1px solid rgba(27,58,107,0.2);border-radius:5px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .gps-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:4px;border:1.5px solid var(--navy);background:transparent;color:var(--navy);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  .gps-btn.captured{background:var(--navy);color:#fff}
+  .gps-btn:disabled{opacity:0.6;cursor:not-allowed}
+  .acc-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600}
+  .acc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .spinner{width:12px;height:12px;border:2px solid rgba(27,58,107,0.3);border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
+  .gps-btn.captured .spinner{border-color:rgba(255,255,255,0.3);border-top-color:#fff}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .resolve-btn{margin-left:auto;padding:5px 10px;border-radius:3px;border:1px solid var(--amber);background:transparent;color:var(--amber);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+  .offline-note{font-size:11px;color:var(--amber);padding:6px 10px;background:#FEF2E4;border-radius:4px;margin-bottom:8px;border:1px solid rgba(224,123,0,0.25)}
+  @media(prefers-color-scheme:dark){.offline-note{background:#2d2010}}
+
+  /* Save indicator */
+  #save-dot{width:6px;height:6px;border-radius:50%;background:#4CAF50;flex-shrink:0;opacity:0;transition:opacity 0.3s}
+  #save-dot.show{opacity:1}
+
+  /* Print */
+  @media print{
+    #topbar,#goldbar,#progress-bar,#tabs,#section-title,#botnav,.btn-add,.gps-btn,.resolve-btn,.no-print{display:none!important}
+    #content{overflow:visible;padding:0;height:auto}
+    #app{height:auto;overflow:visible}
+    html,body{overflow:visible;height:auto}
+    .card{break-inside:avoid;border:1px solid #ccc}
+    .need-block{break-inside:avoid}
+    body{background:#fff;color:#000}
+    .sec-hdr{background:#1B3A6B!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sub-hdr{background:#2E5090!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="topbar-title">
+      <h1>HI-ORR — COMMUNITY DISASTER RESPONSE REPORT</h1>
+      <p id="topbar-sub">Loading…</p>
+    </div>
+    <div id="save-dot"></div>
+    <button class="btn btn-gold" onclick="exportDoc()" style="font-size:11px;padding:5px 10px">.DOC</button>
+    <button class="btn btn-ghost" onclick="window.print()">PDF</button>
+  </div>
+  <div id="goldbar"></div>
+  <div id="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+  <div id="tabs"></div>
+  <div id="section-title"></div>
+  <div id="content"></div>
+  <div id="botnav">
+    <button class="btn btn-outline" id="btn-back" onclick="prevSec()">← Back</button>
+    <span id="sec-counter"></span>
+    <button class="btn btn-navy" id="btn-next" onclick="nextSec()">Next →</button>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const SECS=[
+  {k:'a',short:'Part A',title:'Report Header'},
+  {k:'b',short:'Part B',title:'Location'},
+  {k:'s1',short:'§ 1',title:'Community Overview'},
+  {k:'s2',short:'§ 2',title:'Unmet Needs'},
+  {k:'s3',short:'§ 3',title:'Field Operations'},
+  {k:'s4',short:'§ 4',title:'Wellness & Vector'},
+  {k:'s5',short:'§ 5',title:'Volunteers'},
+  {k:'s6',short:'§ 6',title:'Status Summary'},
+];
+const STORAGE_KEY='hiorr_cdrr_v1';
+let currentSec=0;
+
+// ── Data Model ────────────────────────────────────────────────────────────────
+const initNeed=id=>({id,title:'',description:'',priority:'',agency:'',rsf:'',pocName:'',pocTitle:'',pocPhone:'',pocEmail:'',notifDEM:'',notifEOC:'',notifESF:'',coa:'',resolution:''});
+const initData=()=>({
+  a:{reportNo:'',incident:'',date:'',dtg:'',county:'',site:'',visitType:'Initial',version:'v1',officer:'',agency:'',phone:'',email:'',team:''},
+  b:{street:'',city:'',zip:'',lat:'',lng:'',coordFormat:'WGS84 Decimal',gpsAccuracy:'',gpsCapturedAt:'',secondary:'',secType:'Intersection',narrative:''},
+  s1:{community:'',population:'',vulnerabilities:'',communityPoc:'',access:'Open',water:'Unknown',power:'Unknown',signal:'Available',conditions:''},
+  s2:{needs:[initNeed(1),initNeed(2)]},
+  s3:{entries:[
+    {id:1,label:'Government & Agency Liaison / Relief Programs',type:'Operational Action',description:'',leadAgency:'',poc:'',status:''},
+    {id:2,label:'Military / HING / Debris & Site Clearance',type:'Operational Action',description:'',leadAgency:'',poc:'',status:''},
+    {id:3,label:'Volunteer & Organizational Coordination',type:'Coordination Gap',description:'',leadAgency:'',poc:'',status:''},
+    {id:4,label:'Infrastructure, Utilities & Access',type:'Operational Action',description:'',leadAgency:'',poc:'',status:''},
+  ]},
+  s4:{sites:[
+    {name:'Kaena Farms',communityPoc:'',reqAgency:'',wellnessAgency:'',vectorAgency:'',dtg:'',coordConfirmed:'',water:'',vector:'',dengue:'',wellness:'',road:'',findings:''},
+    {name:'Mahiko Farms',communityPoc:'',reqAgency:'',wellnessAgency:'',vectorAgency:'',dtg:'',coordConfirmed:'',water:'',vector:'',dengue:'',wellness:'',road:'',findings:''},
+    {name:'',communityPoc:'',reqAgency:'',wellnessAgency:'',vectorAgency:'',dtg:'',coordConfirmed:'',water:'',vector:'',dengue:'',wellness:'',road:'',findings:''},
+  ]},
+  s5:{name:'',org:'',expertise:'',phone:'',email:'',demStatus:'Not Yet Registered',demAgency:'',volAck:'',capability:''},
+  s6:{rows:Array(8).fill(null).map(()=>({item:'',priority:'',agency:'',poc:'',notifications:'',rsf:'',status:''})),submittedBy:'',supervisor:'',datetime:'',method:''},
+});
+
+// ── State & Persistence ───────────────────────────────────────────────────────
+let data;
+try{
+  const saved=localStorage.getItem(STORAGE_KEY);
+  data=saved?JSON.parse(saved):initData();
+  // Merge with initData to handle new fields in updates
+  const def=initData();
+  for(const k of Object.keys(def)){
+    if(!data[k]) data[k]=def[k];
+  }
+}catch(e){data=initData()}
+
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      const dot=document.getElementById('save-dot');
+      dot.classList.add('show');
+      setTimeout(()=>dot.classList.remove('show'),1200);
+    }catch(e){}
+  },600);
+}
+
+function clearForm(){
+  if(confirm('Clear all form data? This cannot be undone.')){
+    data=initData();
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  }
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────────
+function calcProgress(){
+  const checks=[
+    data.a.officer,data.a.incident,data.a.date,data.a.county,data.a.site,
+    data.b.lat||data.b.street,
+    data.s1.community,data.s1.conditions,
+    data.s2.needs.some(n=>n.title),
+    data.s6.rows.some(r=>r.item)
+  ];
+  return Math.round(checks.filter(Boolean).length/checks.length*100);
+}
+
+// ── HTML helpers ──────────────────────────────────────────────────────────────
+const e=(t,a,c)=>{const el=document.createElement(t);if(a)Object.entries(a).forEach(([k,v])=>{if(k==='style'&&typeof v==='object')Object.assign(el.style,v);else if(k.startsWith('on'))el[k]=v;else el.setAttribute(k,v)});if(c){if(typeof c==='string')el.innerHTML=c;else if(Array.isArray(c))c.forEach(ch=>ch&&el.appendChild(ch));else el.appendChild(c);}return el};
+
+function secHdr(title,sub){
+  const d=e('div',{class:'sec-hdr'});
+  d.appendChild(e('h2',null,title));
+  if(sub) d.appendChild(e('p',null,sub));
+  return d;
+}
+function subHdr(text){return e('div',{class:'sub-hdr'},text)}
+function alertBox(label,body,type='red'){
+  const d=e('div',{class:`alert alert-${type}`});
+  d.appendChild(e('h4',null,label));
+  d.appendChild(e('p',null,body));
+  return d;
+}
+function card(...children){const c=e('div',{class:'card'});children.forEach(ch=>ch&&c.appendChild(ch));return c}
+
+function field(label,value,setter,opts={}){
+  const wrap=e('div',{class:'field'+(opts.cls?' '+opts.cls:'')});
+  wrap.appendChild(e('label',null,label));
+  let inp;
+  if(opts.type==='select'){
+    inp=e('select');
+    (opts.opts||[]).forEach(o=>{const op=e('option',{value:o},o);if(o===value)op.selected=true;inp.appendChild(op)});
+    inp.onchange=ev=>{setter(ev.target.value);save()};
+  } else if(opts.type==='textarea'){
+    inp=e('textarea',{rows:opts.rows||3,placeholder:opts.hint||''});
+    inp.value=value;
+    inp.oninput=ev=>{setter(ev.target.value);save()};
+  } else {
+    inp=e('input',{type:opts.type||'text',placeholder:opts.hint||''});
+    inp.value=value;
+    inp.oninput=ev=>{setter(ev.target.value);save()};
+  }
+  wrap.appendChild(inp);
+  return wrap;
+}
+
+function grid(...children){
+  const n=children.filter(Boolean).length;
+  const cls=n<=2?'grid-2':n<=3?'grid-3':'grid-4';
+  const d=e('div',{class:cls});
+  children.forEach(c=>c&&d.appendChild(c));
+  return d;
+}
+
+// Priority colors
+const PC={Critical:'#C00000',Urgent:'#E07B00','In Progress':'#1B3A6B',Pending:'#595959',Resolved:'#375623'};
+const PB={Critical:'#FBEAEA',Urgent:'#FEF2E4','In Progress':'#EAF0F8',Pending:'#F9F9F9',Resolved:'#EBF4E8'};
+
+// ── GPS ───────────────────────────────────────────────────────────────────────
+let gpsState='idle'; // idle|loading|success|error|denied
+let resolving=false;
+
+function captureGPS(){
+  if(!navigator.geolocation){gpsState='error';renderGPS();return}
+  gpsState='loading';renderGPS();
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=pos.coords.latitude.toFixed(6);
+      const lng=pos.coords.longitude.toFixed(6);
+      const acc=Math.round(pos.coords.accuracy);
+      const now=new Date();
+      const dtg=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'})+' '+now.toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'});
+      data.b.lat=lat;data.b.lng=lng;data.b.coordFormat='WGS84 Decimal';
+      data.b.gpsAccuracy=String(acc);data.b.gpsCapturedAt=dtg;
+      gpsState='success';save();renderSection();
+    },
+    err=>{
+      gpsState=err.code===1?'denied':'error';
+      renderSection();
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+  renderGPS();
+}
+
+function resolveAddress(){
+  if(!data.b.lat||!data.b.lng||resolving)return;
+  resolving=true;renderSection();
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${data.b.lat}&lon=${data.b.lng}&format=json`,
+    {headers:{'Accept-Language':'en-US'}})
+    .then(r=>r.json())
+    .then(json=>{
+      const a=json.address||{};
+      const street=[a.house_number,a.road].filter(Boolean).join(' ');
+      if(street) data.b.street=street;
+      if(a.city||a.town||a.village) data.b.city=a.city||a.town||a.village||'';
+      if(a.postcode) data.b.zip=a.postcode;
+      resolving=false;save();renderSection();
+    })
+    .catch(()=>{resolving=false;renderSection()});
+}
+
+function renderGPS(){
+  const wrap=document.getElementById('gps-bar');
+  if(!wrap)return;
+  const acc=data.b.gpsAccuracy?parseInt(data.b.gpsAccuracy):null;
+  const accColor=acc?acc<=10?'#375623':acc<=30?'#E07B00':'#C00000':'#888';
+  const accTxt=acc?acc<=10?'Excellent':acc<=30?'Good':'Poor — verify':null;
+  wrap.innerHTML='';
+  // GPS button
+  const btn=e('button',{class:'gps-btn'+(gpsState==='success'?' captured':'')});
+  btn.disabled=gpsState==='loading';
+  btn.onclick=captureGPS;
+  if(gpsState==='loading'){
+    btn.appendChild(e('div',{class:'spinner'}));
+    btn.appendChild(document.createTextNode('Acquiring…'));
+  } else {
+    const svg=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>`;
+    btn.insertAdjacentHTML('beforeend',svg);
+    btn.appendChild(document.createTextNode(gpsState==='success'?'Location Captured':'Use My Location'));
+  }
+  wrap.appendChild(btn);
+  // Accuracy badge
+  if(gpsState==='success'&&acc){
+    const badge=e('div',{class:'acc-badge',style:{color:accColor}});
+    badge.appendChild(e('div',{class:'acc-dot',style:{background:accColor}}));
+    badge.appendChild(document.createTextNode(`±${acc}m — ${accTxt}`));
+    if(data.b.gpsCapturedAt){
+      const ts=e('span',{style:{fontSize:'10px',color:'var(--text3)',marginLeft:'6px'}},data.b.gpsCapturedAt);
+      badge.appendChild(ts);
+    }
+    wrap.appendChild(badge);
+  }
+  if(gpsState==='error'||gpsState==='denied'){
+    const msg=e('span',{style:{fontSize:'11px',color:'#C00000',flex:'1'}},
+      gpsState==='denied'?'Permission denied — enable location in device settings':'GPS unavailable — move outside and retry'
+    );
+    wrap.appendChild(msg);
+  }
+  // Resolve button
+  if(data.b.lat&&data.b.lng&&!data.b.street){
+    const rb=e('button',{class:'resolve-btn',style:{marginLeft:'auto'}});
+    rb.textContent=resolving?'Resolving…':'Resolve Address';
+    rb.disabled=resolving;
+    rb.onclick=resolveAddress;
+    wrap.appendChild(rb);
+  }
+}
+
+// ── Section renderers ─────────────────────────────────────────────────────────
+function renderPartA(){
+  const d=data.a;
+  const u=(k,v)=>{d[k]=v};
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Part A — Report Header','Complete before leaving for the field. One form per site visit.'));
+  const c=card(
+    subHdr('Report Metadata'),
+    grid(
+      field('Report No.',d.reportNo,v=>u('reportNo',v),{hint:'e.g., CDRR-001'}),
+      field('Incident',d.incident,v=>u('incident',v),{hint:'e.g., KL2 — 2026-15'}),
+      field('Date',d.date,v=>u('date',v),{type:'date'}),
+    ),
+    grid(
+      field('DTG',d.dtg,v=>u('dtg',v),{hint:'e.g., 1400 HST'}),
+      field('County',d.county,v=>u('county',v),{type:'select',opts:['','Oahu','Maui','Hawaii Island','Kauai']}),
+      field('Visit Type',d.visitType,v=>u('visitType',v),{type:'select',opts:['Initial','Follow-Up','Final']}),
+    ),
+    grid(
+      field('Community / Site',d.site,v=>u('site',v),{hint:'e.g., Long Bridge, North Shore'}),
+      field('Version',d.version,v=>u('version',v),{hint:'v1'}),
+    ),
+    subHdr('Field Reporting POC'),
+    grid(
+      field('Reporting Officer',d.officer,v=>u('officer',v),{hint:'Last, First'}),
+      field('Agency / Title',d.agency,v=>u('agency',v),{hint:'e.g., HI-ORR Field Coordinator'}),
+    ),
+    grid(
+      field('Phone',d.phone,v=>u('phone',v),{type:'tel'}),
+      field('Email',d.email,v=>u('email',v),{type:'email'}),
+    ),
+    field('Team on Site',d.team,v=>u('team',v),{type:'textarea',hint:'Names of all personnel present',rows:2}),
+  );
+  frag.appendChild(c);
+  return frag;
+}
+
+function renderPartB(){
+  const d=data.b;
+  const u=(k,v)=>{d[k]=v};
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Part B — Location Identification','Two confirmed location methods required. Tap "Use My Location" to auto-fill from device GPS.'));
+  // GPS bar
+  const gpsBar=e('div',{id:'gps-bar',class:'gps-bar'});
+  const c=card(
+    gpsBar,
+    subHdr('GPS Coordinates (auto-filled or enter manually)'),
+    grid(
+      field('Latitude',d.lat,v=>u('lat',v),{hint:'e.g., 21.3069'}),
+      field('Longitude',d.lng,v=>u('lng',v),{hint:'e.g., -157.7558'}),
+      field('Format',d.coordFormat,v=>u('coordFormat',v),{type:'select',opts:['WGS84 Decimal','MGRS','DMS']}),
+    ),
+  );
+  if(d.gpsAccuracy){
+    const g=grid(
+      field('GPS Accuracy (m)',d.gpsAccuracy,v=>u('gpsAccuracy',v),{hint:'Device-reported radius'}),
+      field('Captured At',d.gpsCapturedAt,v=>u('gpsCapturedAt',v),{hint:'Auto-filled DTG'}),
+    );
+    c.appendChild(g);
+  }
+  if(d.lat&&d.lng&&!d.street){
+    c.appendChild(e('div',{class:'offline-note'},'Coordinates captured. Tap "Resolve Address" when signal is available to auto-fill street address.'));
+  }
+  if(gpsState==='denied'){
+    c.appendChild(alertBox('Location Permission Required',
+      'iPhone: Settings → Privacy & Security → Location Services → Safari → While Using. Android: Settings → Apps → Browser → Permissions → Location.','red'));
+  }
+  c.appendChild(subHdr('Street Address (auto-filled by Resolve Address, or enter manually)'));
+  const addr=e('div',{class:'grid-3'});
+  addr.appendChild(field('Street Address',d.street,v=>u('street',v),{hint:'Number and street name'}));
+  addr.appendChild(field('City / District',d.city,v=>u('city',v)));
+  addr.appendChild(field('ZIP',d.zip,v=>u('zip',v)));
+  c.appendChild(addr);
+  c.appendChild(subHdr('Secondary Confirmation'));
+  const sec=e('div',{class:'grid-2'});
+  sec.appendChild(field('Type',d.secType,v=>u('secType',v),{type:'select',opts:['Intersection','Bridge / Water Feature','Building / Structure']}));
+  sec.appendChild(field('Description',d.secondary,v=>u('secondary',v),{hint:'Describe the secondary reference'}));
+  c.appendChild(sec);
+  c.appendChild(field('Narrative Descriptor',d.narrative,v=>u('narrative',v),{type:'textarea',hint:'Landmarks, access road conditions, approach hazards — sufficient for an unfamiliar person to locate the site independently.',rows:3}));
+  frag.appendChild(c);
+  // Render GPS bar state
+  setTimeout(()=>renderGPS(),0);
+  return frag;
+}
+
+function renderSec1(){
+  const d=data.s1;
+  const u=(k,v)=>{d[k]=v};
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Section 1 — Community Overview','Establish context before recording findings.'));
+  frag.appendChild(card(
+    grid(
+      field('Community / Neighborhood',d.community,v=>u('community',v)),
+      field('Estimated Affected Population',d.population,v=>u('population',v),{hint:'# individuals / households'}),
+    ),
+    grid(
+      field('Key Vulnerabilities',d.vulnerabilities,v=>u('vulnerabilities',v),{hint:'e.g., elderly, infants, no vehicle'}),
+      field('Community POC / Local Leader',d.communityPoc,v=>u('communityPoc',v),{hint:'Name | Phone | Role'}),
+    ),
+    grid(
+      field('Access Status',d.access,v=>u('access',v),{type:'select',opts:['Open','Limited','Road Damage','Off-Grid','Isolated']}),
+      field('Potable Water',d.water,v=>u('water',v),{type:'select',opts:['Safe','Unsafe','Unknown']}),
+      field('Power / Utilities',d.power,v=>u('power',v),{type:'select',opts:['Restored','Partial','Out','Unknown']}),
+      field('Cell / Radio Signal',d.signal,v=>u('signal',v),{type:'select',opts:['Available','Partial','None']}),
+    ),
+    field('Site Conditions & Active Hazards',d.conditions,v=>u('conditions',v),{type:'textarea',hint:'Overall conditions, visible damage, standing water, structural hazards.',rows:4}),
+  ));
+  return frag;
+}
+
+function buildNeedBlock(n,idx){
+  const u=(k,v)=>{n[k]=v;save()};
+  const wrap=e('div',{class:'need-block'});
+  const hdr=e('div',{class:'need-hdr'});
+  const num=e('span',{class:'need-num'},`2.${idx+1}`);
+  const titleInp=e('input',{type:'text',placeholder:'Need title / description',value:n.title});
+  titleInp.oninput=ev=>u('title',ev.target.value);
+  hdr.appendChild(num);hdr.appendChild(titleInp);
+  if(n.priority){
+    const badge=e('span',{class:'priority-badge',style:{background:PB[n.priority]||'#eee',color:PC[n.priority]||'#333'}},n.priority);
+    hdr.appendChild(badge);
+  }
+  wrap.appendChild(hdr);
+  const body=e('div',{class:'need-body'});
+  const row=e('div',{class:'need-row'});
+  // Left: description
+  const left=e('div');
+  left.appendChild(field('Description',n.description,v=>u('description',v),{type:'textarea',hint:'Specific need, people affected, current conditions.',rows:4}));
+  row.appendChild(left);
+  // Right: priority/agency/rsf
+  const right=e('div');
+  right.appendChild(field('Priority',n.priority,v=>u('priority',v),{type:'select',opts:['','Critical','Urgent','In Progress','Pending','Resolved']}));
+  right.appendChild(field('Agency of Responsibility',n.agency,v=>u('agency',v)));
+  right.appendChild(field('RSF Alignment',n.rsf,v=>u('rsf',v),{hint:'e.g., PHHS RSF'}));
+  row.appendChild(right);
+  body.appendChild(row);
+  wrap.appendChild(body);
+  // POC + notifications
+  const footer=e('div',{class:'need-footer'});
+  const notifRow=e('div',{class:'need-notif'});
+  const pocDiv=e('div');
+  pocDiv.appendChild(subHdr('Responsible Party POC'));
+  pocDiv.appendChild(grid(
+    field('Name',n.pocName,v=>u('pocName',v)),
+    field('Title / Agency',n.pocTitle,v=>u('pocTitle',v)),
+    field('Phone',n.pocPhone,v=>u('pocPhone',v),{type:'tel'}),
+    field('Email',n.pocEmail,v=>u('pocEmail',v),{type:'email'}),
+  ));
+  notifRow.appendChild(pocDiv);
+  const notDiv=e('div');
+  notDiv.appendChild(subHdr('Notifications Made'));
+  notDiv.appendChild(grid(
+    field('County DEM',n.notifDEM,v=>u('notifDEM',v),{type:'select',opts:['','YES','NO']}),
+    field('State EOC',n.notifEOC,v=>u('notifEOC',v),{type:'select',opts:['','YES','NO']}),
+  ));
+  notDiv.appendChild(field('ESF(s) Notified',n.notifESF,v=>u('notifESF',v),{hint:'e.g., ESF-8, ESF-3'}));
+  notifRow.appendChild(notDiv);
+  footer.appendChild(notifRow);
+  footer.appendChild(field('Course of Action — Who is doing what, by when',n.coa,v=>u('coa',v),{type:'textarea',hint:'Step 1: … Step 2: … Step 3: …',rows:2}));
+  footer.appendChild(field('Resolution Status',n.resolution,v=>u('resolution',v),{hint:'Last updated / current status / remaining barriers'}));
+  wrap.appendChild(footer);
+  return wrap;
+}
+
+function renderSec2(){
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Section 2 — Unmet Critical Needs','All Critical and Urgent items require agency, POC, notification, and course of action.'));
+  frag.appendChild(alertBox('NOTIFICATION REQUIREMENT','Critical and Urgent items MUST document: agency of responsibility, responsible POC, notifications to County DEM / State EOC / applicable ESFs with DTG, and course of action. Incomplete entries will be returned.','red'));
+  data.s2.needs.forEach((n,i)=>frag.appendChild(buildNeedBlock(n,i)));
+  const addBtn=e('button',{class:'btn-add no-print'},'+ Add Need Block');
+  addBtn.onclick=()=>{data.s2.needs.push(initNeed(data.s2.needs.length+1));save();renderSection()};
+  frag.appendChild(addBtn);
+  return frag;
+}
+
+function renderSec3(){
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Section 3 — Field Operations & Coordination','Use TYPE to distinguish Operational Actions from Coordination Gaps.'));
+  data.s3.entries.forEach((ent,i)=>{
+    const u=(k,v)=>{ent[k]=v;save()};
+    const c=card();
+    const hdrRow=e('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'10px',flexWrap:'wrap'}});
+    hdrRow.appendChild(e('div',{style:{background:'var(--navy-bg)',color:'var(--navy)',fontWeight:'800',fontSize:'12px',padding:'3px 8px',borderRadius:'3px',flexShrink:'0'}},'3.'+(i+1)));
+    hdrRow.appendChild(e('div',{style:{fontWeight:'600',fontSize:'13px',color:'var(--navy)',flex:'1',minWidth:'120px'}},ent.label));
+    // Type toggle
+    const tog=e('div',{class:'ops-type no-print'});
+    ['Operational Action','Coordination Gap'].forEach(t=>{
+      const b=e('button',null,t);
+      if(ent.type===t) b.classList.add('active');
+      b.onclick=()=>{u('type',t);renderSection()};
+      tog.appendChild(b);
+    });
+    hdrRow.appendChild(tog);
+    c.appendChild(hdrRow);
+    c.appendChild(field('Description / Actions Taken',ent.description,v=>u('description',v),{type:'textarea',hint:'What is happening or what gap exists?',rows:3}));
+    c.appendChild(grid(
+      field('Lead Agency',ent.leadAgency,v=>u('leadAgency',v)),
+      field('POC — Name & Contact',ent.poc,v=>u('poc',v)),
+      field('Status',ent.status,v=>u('status',v),{type:'select',opts:['','Confirmed','In Progress','Pending','Resolved']}),
+    ));
+    frag.appendChild(c);
+  });
+  return frag;
+}
+
+function renderSec4(){
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Section 4 — Wellness Check & Vector Control','Mandatory for isolated / off-grid communities. Kaena Farms and Mahiko Farms at every visit.'));
+  frag.appendChild(alertBox('PUBLIC HEALTH ADVISORY — DENGUE & VECTOR RISK','Mosquito eggs hatch within 4 days; populations disperse within one week. Advance coordination with DOH, DEM, or HING required before deployment. Do not deploy uncoordinated.','red'));
+  const CKS=['water','vector','dengue','wellness','road'];
+  const CKLAB=['Standing Water','Vector Control','Dengue Screen','Wellness Check','Road Access'];
+  data.s4.sites.forEach((s,si)=>{
+    const u=(k,v)=>{s[k]=v;save()};
+    const c=card();
+    const lbl=e('div',{style:{fontWeight:'700',fontSize:'13px',color:'var(--navy)',marginBottom:'10px',borderLeft:`3px solid ${si<2?'var(--navy)':'var(--amber)'}`,paddingLeft:'8px'}},`4.${si+1}  `+(s.name||'Other Isolated Site'));
+    c.appendChild(lbl);
+    if(si===2) c.appendChild(field('Site Name',s.name,v=>u('name',v),{hint:'Enter site name'}));
+    c.appendChild(grid(
+      field('Community POC',s.communityPoc,v=>u('communityPoc',v),{hint:'Name | Phone | Role'}),
+      field('Requesting Agency',s.reqAgency,v=>u('reqAgency',v)),
+      field('Wellness Check Agency',s.wellnessAgency,v=>u('wellnessAgency',v),{hint:'DOH / DEM / HING'}),
+      field('Vector Control Agency',s.vectorAgency,v=>u('vectorAgency',v)),
+      field('Planned Visit DTG',s.dtg,v=>u('dtg',v),{hint:'DD MMM YYYY | HHMM HST'}),
+      field('Advance Coordination Confirmed',s.coordConfirmed,v=>u('coordConfirmed',v),{type:'select',opts:['','YES','NO']}),
+    ));
+    const ckLbl=e('div',{class:'field'});
+    ckLbl.appendChild(e('label',null,'Checklist'));
+    const ckGrid=e('div',{class:'ck-grid'});
+    CKS.forEach((ck,ci)=>{
+      const item=e('div',{class:'ck-item'});
+      item.appendChild(e('label',null,CKLAB[ci]));
+      const sel=e('select');
+      ['','YES','NO','N/A'].forEach(o=>{const op=e('option',{value:o},o);if(o===s[ck])op.selected=true;sel.appendChild(op)});
+      sel.onchange=ev=>{u(ck,ev.target.value)};
+      item.appendChild(sel);
+      ckGrid.appendChild(item);
+    });
+    ckLbl.appendChild(ckGrid);
+    c.appendChild(ckLbl);
+    c.appendChild(field('Findings / Actions Taken / Follow-Up Required',s.findings,v=>u('findings',v),{type:'textarea',hint:'Health concerns, actions, referrals, follow-up.',rows:3}));
+    frag.appendChild(c);
+  });
+  return frag;
+}
+
+function renderSec5(){
+  const d=data.s5;
+  const u=(k,v)=>{d[k]=v};
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Section 5 — Private Industry & Volunteer Registration','Required for all non-government personnel. Attach additional sheets for more entries.'));
+  frag.appendChild(alertBox('VOLUNTEER STATUS — ACKNOWLEDGMENT REQUIRED','All private industry personnel must confirm voluntary service, register with county DEM before deployment, and provide a capability brief.','amber'));
+  frag.appendChild(card(
+    subHdr('5.1  Volunteer / Private Industry Entry'),
+    grid(
+      field('Full Name',d.name,v=>u('name',v),{hint:'Last, First'}),
+      field('Organization / Company',d.org,v=>u('org',v)),
+    ),
+    grid(
+      field('Expertise / Discipline',d.expertise,v=>u('expertise',v),{hint:'e.g., Civil Engineering / Medical'}),
+      field('Phone',d.phone,v=>u('phone',v),{type:'tel'}),
+      field('Email',d.email,v=>u('email',v),{type:'email'}),
+    ),
+    grid(
+      field('DEM Registration Status',d.demStatus,v=>u('demStatus',v),{type:'select',opts:['Registered','Pending','Not Yet Registered']}),
+      field('Registration Agency',d.demAgency,v=>u('demAgency',v),{hint:'e.g., CCH DEM / MEMA'}),
+      field('Volunteer Status Acknowledged',d.volAck,v=>u('volAck',v),{type:'select',opts:['','YES — Verbal','YES — Written','NO']}),
+    ),
+    field('Capability Brief / Bona Fides',d.capability,v=>u('capability',v),{type:'textarea',hint:'Qualifications, certifications, experience, equipment available.',rows:3}),
+  ));
+  return frag;
+}
+
+function renderSec6(){
+  const d=data.s6;
+  const u=(k,v)=>{d[k]=v};
+  const frag=document.createDocumentFragment();
+  frag.appendChild(secHdr('Section 6 — Needs Status Summary','Primary handoff to County DEM, State EOC, and applicable RSF leads.'));
+  frag.appendChild(alertBox('DISTRIBUTION — DEM / STATE EOC / RSF LEADS','Agency, POC, and notification status required for every Critical and Urgent item before transmission. Incomplete rows will be flagged.','amber'));
+  const c=card();
+  const wrap=e('div',{class:'tbl-wrap'});
+  const tbl=e('table',{class:'summary'});
+  const thead=e('thead');
+  const hrow=e('tr');
+  ['NEED / ACTION ITEM','PRIORITY','AGENCY','LEAD POC','NOTIFICATIONS','RSF','STATUS'].forEach(h=>{hrow.appendChild(e('th',null,h))});
+  thead.appendChild(hrow);tbl.appendChild(thead);
+  const tbody=e('tbody');
+  d.rows.forEach((r,i)=>{
+    const u2=(k,v)=>{r[k]=v;save()};
+    const tr=e('tr');
+    const mkInp=(k)=>{const inp=e('input',{type:'text',value:r[k]});inp.oninput=ev=>u2(k,ev.target.value);return e('td',null,inp)};
+    const mkSel=(k,opts)=>{
+      const sel=e('select');
+      opts.forEach(o=>{const op=e('option',{value:o},o);if(o===r[k])op.selected=true;sel.appendChild(op)});
+      sel.onchange=ev=>{u2(k,ev.target.value)};
+      if(r[k]&&PC[r[k]]) sel.style.color=PC[r[k]];
+      return e('td',null,sel);
+    };
+    tr.appendChild(mkInp('item'));
+    tr.appendChild(mkSel('priority',['','Critical','Urgent','In Progress','Pending','Resolved']));
+    tr.appendChild(mkInp('agency'));tr.appendChild(mkInp('poc'));tr.appendChild(mkInp('notifications'));tr.appendChild(mkInp('rsf'));
+    tr.appendChild(mkSel('status',['','Critical','Urgent','In Progress','Pending','Resolved']));
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);wrap.appendChild(tbl);c.appendChild(wrap);
+  c.appendChild(subHdr('Submission'));
+  c.appendChild(grid(
+    field('Submitted By',d.submittedBy,v=>u('submittedBy',v),{hint:'Last, First | Agency | Title'}),
+    field('Reporting To / Supervisor',d.supervisor,v=>u('supervisor',v)),
+    field('Date / Time of Submission',d.datetime,v=>u('datetime',v),{type:'datetime-local'}),
+    field('Transmission Method',d.method,v=>u('method',v),{type:'select',opts:['','Email','HIEMA EOC Portal','Hand Delivery','Fax']}),
+  ));
+  frag.appendChild(c);
+  // Clear data button
+  const clrBtn=e('button',{class:'btn no-print',style:{marginTop:'12px',padding:'6px 12px',border:'1px solid var(--border)',background:'transparent',color:'var(--text3)',fontSize:'11px',borderRadius:'4px',cursor:'pointer'}},'Clear All Form Data');
+  clrBtn.onclick=clearForm;
+  frag.appendChild(clrBtn);
+  return frag;
+}
+
+// ── Render engine ─────────────────────────────────────────────────────────────
+const renderers=[renderPartA,renderPartB,renderSec1,renderSec2,renderSec3,renderSec4,renderSec5,renderSec6];
+
+function renderSection(){
+  const content=document.getElementById('content');
+  content.innerHTML='';
+  content.scrollTop=0;
+  content.appendChild(renderers[currentSec]());
+}
+
+function render(){
+  // Tabs
+  const tabs=document.getElementById('tabs');
+  tabs.innerHTML='';
+  SECS.forEach((s,i)=>{
+    const btn=e('button',{class:'tab'+(i===currentSec?' active':'')},s.short);
+    btn.onclick=()=>{currentSec=i;render()};
+    tabs.appendChild(btn);
+  });
+  // Scroll active tab into view
+  setTimeout(()=>{
+    const active=tabs.querySelector('.active');
+    if(active) active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+  },50);
+  // Section title
+  document.getElementById('section-title').textContent=SECS[currentSec].title;
+  // Top bar subtitle
+  const pct=calcProgress();
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('topbar-sub').textContent=`${pct}% complete  |  `+(data.a.site||'No site entered')+(data.a.date?' | '+data.a.date:'');
+  // Nav buttons
+  document.getElementById('btn-back').disabled=currentSec===0;
+  document.getElementById('btn-next').disabled=currentSec===SECS.length-1;
+  document.getElementById('sec-counter').textContent=`${currentSec+1} of ${SECS.length}`;
+  // Content
+  renderSection();
+}
+
+function prevSec(){if(currentSec>0){currentSec--;render()}}
+function nextSec(){if(currentSec<SECS.length-1){currentSec++;render()}}
+
+// ── Export to .doc ────────────────────────────────────────────────────────────
+function exportDoc(){
+  const fld=(l,v)=>v?`<tr><td style="background:#f2f2f2;font-weight:bold;padding:4px 8px;border:1px solid #ccc;width:35%;font-size:9pt">${l}</td><td style="padding:4px 8px;border:1px solid #ccc;font-size:9pt">${v}</td></tr>`:'';
+  const tbl=rows=>`<table style="width:100%;border-collapse:collapse;margin-bottom:8px">${rows.join('')}</table>`;
+  const sec=(t,body)=>`<h2 style="background:#1B3A6B;color:white;padding:6px 10px;font-size:12pt;margin-top:12pt">${t}</h2>${body}`;
+  const {a:da,b:db,s1:ds1,s2:ds2,s3:ds3,s4:ds4,s5:ds5,s6:ds6}=data;
+  const gpsStr=db.lat&&db.lng?`${db.lat}, ${db.lng} (${db.coordFormat})${db.gpsAccuracy?' — ±'+db.gpsAccuracy+'m':''}${db.gpsCapturedAt?' — captured '+db.gpsCapturedAt:''}`:'';
+  let h=`<html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:20px;font-size:10pt}h1{color:#1B3A6B;font-size:14pt;border-bottom:2px solid #C8960C;padding-bottom:4px}h2{color:white;background:#1B3A6B;padding:5px 8px;font-size:11pt}h3{color:#2E5090;font-size:10pt;margin:6px 0 3px}table{width:100%;border-collapse:collapse;margin-bottom:8px}td{padding:3px 6px;border:0.5px solid #ccc;font-size:9pt}th{background:#1B3A6B;color:white;padding:4px 6px;font-size:9pt;text-align:left}</style></head><body>`;
+  h+=`<h1>HI-ORR — Community Disaster Response Report</h1><p style="font-size:8pt;color:#C00000"><strong>FOR OFFICIAL USE ONLY | SENSITIVE — PRE-DECISIONAL</strong></p>`;
+  h+=sec('PART A — REPORT HEADER',tbl([fld('Report No.',da.reportNo),fld('Incident',da.incident),fld('Date',da.date),fld('DTG',da.dtg),fld('County',da.county),fld('Community / Site',da.site),fld('Visit Type',da.visitType),fld('Version',da.version),fld('Reporting Officer',da.officer),fld('Agency / Title',da.agency),fld('Phone',da.phone),fld('Email',da.email),fld('Team on Site',da.team)]));
+  h+=sec('PART B — LOCATION',tbl([fld('Street Address',[db.street,db.city,db.zip].filter(Boolean).join(', ')),fld('GPS Coordinates',gpsStr),fld('Secondary Confirmation',db.secType+(db.secondary?' — '+db.secondary:'')),fld('Narrative Descriptor',db.narrative)]));
+  h+=sec('SECTION 1 — COMMUNITY OVERVIEW',tbl([fld('Community',ds1.community),fld('Estimated Population',ds1.population),fld('Key Vulnerabilities',ds1.vulnerabilities),fld('Community POC',ds1.communityPoc),fld('Access Status',ds1.access),fld('Potable Water',ds1.water),fld('Power / Utilities',ds1.power),fld('Cell / Radio Signal',ds1.signal),fld('Site Conditions & Hazards',ds1.conditions)]));
+  h+=`<h2>SECTION 2 — UNMET CRITICAL NEEDS</h2>`;
+  ds2.needs.forEach((n,i)=>{h+=`<h3>2.${i+1} ${n.title||'(untitled)'}</h3>`;h+=tbl([fld('Priority',n.priority),fld('Agency',n.agency),fld('RSF',n.rsf),fld('Description',n.description),fld('POC',[n.pocName,n.pocTitle,n.pocPhone,n.pocEmail].filter(Boolean).join(' | ')),fld('Notifications',`DEM: ${n.notifDEM||'—'} | EOC: ${n.notifEOC||'—'} | ESF: ${n.notifESF||'—'}`),fld('Course of Action',n.coa),fld('Resolution Status',n.resolution)])});
+  h+=`<h2>SECTION 3 — FIELD OPERATIONS & COORDINATION</h2>`;
+  ds3.entries.forEach((ent,i)=>{h+=`<h3>3.${i+1} ${ent.label}</h3>`;h+=tbl([fld('Type',ent.type),fld('Description',ent.description),fld('Lead Agency',ent.leadAgency),fld('POC',ent.poc),fld('Status',ent.status)])});
+  h+=`<h2>SECTION 4 — WELLNESS CHECK & VECTOR CONTROL</h2>`;
+  ds4.sites.forEach((s,i)=>{h+=`<h3>4.${i+1} ${s.name||'Other Isolated Site'}</h3>`;h+=tbl([fld('Community POC',s.communityPoc),fld('Requesting Agency',s.reqAgency),fld('Wellness Agency',s.wellnessAgency),fld('Vector Control Agency',s.vectorAgency),fld('Planned DTG',s.dtg),fld('Coordination Confirmed',s.coordConfirmed),fld('Checklist',`Standing Water: ${s.water||'—'} | Vector Control: ${s.vector||'—'} | Dengue Screening: ${s.dengue||'—'} | Wellness: ${s.wellness||'—'} | Road Access: ${s.road||'—'}`),fld('Findings',s.findings)])});
+  h+=sec('SECTION 5 — VOLUNTEER REGISTRATION',tbl([fld('Name',ds5.name),fld('Organization',ds5.org),fld('Expertise',ds5.expertise),fld('Phone',ds5.phone),fld('Email',ds5.email),fld('DEM Status',ds5.demStatus),fld('Registration Agency',ds5.demAgency),fld('Vol. Acknowledged',ds5.volAck),fld('Capability Brief',ds5.capability)]));
+  h+=`<h2>SECTION 6 — NEEDS STATUS SUMMARY</h2><table><tr><th>Need / Action Item</th><th>Priority</th><th>Agency</th><th>Lead POC</th><th>Notifications</th><th>RSF</th><th>Status</th></tr>`;
+  ds6.rows.forEach(r=>{if(r.item||r.agency||r.status)h+=`<tr><td>${r.item}</td><td>${r.priority}</td><td>${r.agency}</td><td>${r.poc}</td><td>${r.notifications}</td><td>${r.rsf}</td><td>${r.status}</td></tr>`});
+  h+=`</table>`;
+  h+=tbl([fld('Submitted By',ds6.submittedBy),fld('Reporting To',ds6.supervisor),fld('Submission Date/Time',ds6.datetime),fld('Transmission Method',ds6.method)]);
+  h+=`<p style="font-size:8pt;color:#1B3A6B;margin-top:16px;border-top:1px solid #C8960C;padding-top:6px">Hawai&#699;i Office of Recovery and Resiliency (HI-ORR) | State Disaster Recovery Coordinator | hiorr@hawaii.gov</p></body></html>`;
+  const blob=new Blob(['\ufeff',h],{type:'application/msword'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`HI-ORR_CDRR_${da.reportNo||'DRAFT'}_${da.date||'undated'}.doc`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
